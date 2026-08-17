@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -25,4 +27,6 @@ public class Treino {
     @JoinColumn(name = "aluno_id", nullable = false)
     private Aluno aluno;
 
+    @OneToMany(mappedBy = "treino", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemExercicio> itens = new ArrayList<>();
 }
