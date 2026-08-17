@@ -30,6 +30,12 @@
 		<java.version>25</java.version>
 	</properties>
 	<dependencies>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+			<version>13.3.0</version>
+			<scope>compile</scope>
+		</dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
