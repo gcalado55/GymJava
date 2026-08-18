@@ -8,37 +8,37 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Entity
-@Table(name = "item_exercicio")
+@Table(name = "workout_exercise")
 @Getter
 @Setter
 @NoArgsConstructor
-public class ItemExercicio {
+public class WorkoutExercise {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "treino_id", nullable = false)
-    private Treino treino;
+    @JoinColumn(name = "workout_id", nullable = false)
+    private Workout workout;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "exercicio_id", nullable = false)
-    private Exercicio exercicio;
+    @JoinColumn(name = "exercise_id", nullable = false)
+    private Exercise exercise;
 
     @Column(nullable = false)
-    private Integer series;
+    private Integer sets;
 
     @Column(nullable = false)
-    private Integer repeticoes;
+    private Integer reps;
 
     @Column(nullable = false)
-    private Double cargaKg;
+    private Double weightKg;
 
     @Column(nullable = false)
-    private String tecnica = "NENHUMA_TECNICA";
+    private String technique = "NO_TECHNIQUE";
 
     @Column(columnDefinition = "TEXT")
-    private String anotacoes;
+    private String notes;
 
 }
