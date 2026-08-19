@@ -1,13 +1,19 @@
 package com.treinoapp.api.service;
 
+import com.treinoapp.api.dto.WorkoutExerciseDTO;
+import com.treinoapp.api.dto.WorkoutResponseDTO;
 import com.treinoapp.api.model.Exercise;
 import com.treinoapp.api.model.Member;
 import com.treinoapp.api.model.Workout;
 import com.treinoapp.api.model.WorkoutExercise;
 import com.treinoapp.api.repository.WorkoutRepository;
+import com.treinoapp.api.technique.TrainingTechniqueFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class WorkoutService {
@@ -56,4 +62,23 @@ public class WorkoutService {
                 .orElseThrow(() -> new IllegalArgumentException("Workout not found: " + id));
     }
 
+
+    public WorkoutResponseDTO findByIdFormatted(UUID id) {
+        Workout workout = findById(id);
+        List<WorkoutExerciseDTO> exerciseDTOS = workout.getExercises().stream()
+                .map(workoutExercise -> new WorkoutExerciseDTO(
+                        workoutExercise.getExercise().getName(),
+                        workoutExercise.getSets(),
+                        workoutExercise.getReps(),
+                        workoutExercise.getWeightKg(),
+                        workoutExercise.getNotes(),
+                        workoutExercise.getTechnique(),
+                        TrainingTechniqueFactory.fromCode(workoutExercise.getTechnique()).getDisplayName()
+                )).toList();
+        return new WorkoutResponseDTO(
+                workout.getName(),
+                workout.getMember().getName(),
+                exerciseDTOS
+        );
+    }
 }
