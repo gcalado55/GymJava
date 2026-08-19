@@ -9,19 +9,19 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Entity
-@Table(name = "aluno")
+@Table(name = "member")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Aluno {
+public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false)
-    private String nome;
+    private String name;
 
     @Column(nullable = false, unique = true)
     private String email;

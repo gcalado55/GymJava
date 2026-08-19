@@ -10,23 +10,23 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "treino")
+@Table(name = "workout")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Treino {
+public class Workout {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false)
-    private String nome;
+    private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "aluno_id", nullable = false)
-    private Aluno aluno;
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
-    @OneToMany(mappedBy = "treino", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ItemExercicio> itens = new ArrayList<>();
+    @OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WorkoutExercise> exercises = new ArrayList<>();
 }

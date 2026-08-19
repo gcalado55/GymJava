@@ -1,9 +1,9 @@
 package com.treinoapp.api.repository;
 
-import com.treinoapp.api.model.ItemExercicio;
+import com.treinoapp.api.model.WorkoutExercise;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface ItemExercicioRepository extends JpaRepository<ItemExercicio, UUID> {
+public interface WorkoutExerciseRepository extends JpaRepository<WorkoutExercise, UUID> {
 }
