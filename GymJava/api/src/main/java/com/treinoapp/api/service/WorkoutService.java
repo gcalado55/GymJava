@@ -2,6 +2,7 @@ package com.treinoapp.api.service;
 
 import com.treinoapp.api.dto.WorkoutExerciseDTO;
 import com.treinoapp.api.dto.WorkoutResponseDTO;
+import com.treinoapp.api.exception.WorkoutNotFoundException;
 import com.treinoapp.api.model.Exercise;
 import com.treinoapp.api.model.Member;
 import com.treinoapp.api.model.Workout;
@@ -11,9 +12,7 @@ import com.treinoapp.api.technique.TrainingTechniqueFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class WorkoutService {
@@ -59,7 +58,7 @@ public class WorkoutService {
 
     public Workout findById(UUID id) {
         return workoutRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Workout not found: " + id));
+                .orElseThrow(() -> new WorkoutNotFoundException(id));
     }
 
 

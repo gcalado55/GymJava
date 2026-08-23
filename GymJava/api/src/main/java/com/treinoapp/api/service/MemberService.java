@@ -1,5 +1,6 @@
 package com.treinoapp.api.service;
 
+import com.treinoapp.api.exception.MemberNotFoundException;
 import com.treinoapp.api.model.Member;
 import com.treinoapp.api.repository.MemberRepository;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class MemberService {
 
     public Member findById(UUID id) {
         return memberRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found: " + id));
+                .orElseThrow(() -> new MemberNotFoundException(id));
     }
 
 }

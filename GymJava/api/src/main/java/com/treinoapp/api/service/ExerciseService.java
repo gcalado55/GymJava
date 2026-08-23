@@ -1,5 +1,6 @@
 package com.treinoapp.api.service;
 
+import com.treinoapp.api.exception.ExerciseNotFoundException;
 import com.treinoapp.api.model.Exercise;
 import com.treinoapp.api.repository.ExerciseRepository;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class ExerciseService {
 
     public Exercise findById(UUID id) {
         return exerciseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Exercise not found: " + id));
+                .orElseThrow(() -> new ExerciseNotFoundException(id));
     }
 
 }
