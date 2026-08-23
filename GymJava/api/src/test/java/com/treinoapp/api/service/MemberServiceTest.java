@@ -1,5 +1,6 @@
 package com.treinoapp.api.service;
 
+import com.treinoapp.api.exception.MemberNotFoundException;
 import com.treinoapp.api.model.Member;
 import com.treinoapp.api.repository.MemberRepository;
 import org.junit.jupiter.api.Test;
@@ -55,7 +56,7 @@ class MemberServiceTest {
         UUID id = UUID.randomUUID();
         when(memberRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> memberService.findById(id));
+        assertThrows(MemberNotFoundException.class, () -> memberService.findById(id));
     }
 
 }

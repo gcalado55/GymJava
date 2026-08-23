@@ -1,5 +1,6 @@
 package com.treinoapp.api.service;
 
+import com.treinoapp.api.exception.ExerciseNotFoundException;
 import com.treinoapp.api.model.Exercise;
 import com.treinoapp.api.repository.ExerciseRepository;
 import org.junit.jupiter.api.Test;
@@ -68,7 +69,7 @@ class ExerciseServiceTest {
         UUID id = UUID.randomUUID();
         when(exerciseRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> exerciseService.findById(id));
+        assertThrows(ExerciseNotFoundException.class, () -> exerciseService.findById(id));
     }
 
 }

@@ -1,6 +1,8 @@
 package com.treinoapp.api.service;
 
 import com.treinoapp.api.dto.WorkoutResponseDTO;
+import com.treinoapp.api.exception.MemberNotFoundException;
+import com.treinoapp.api.exception.WorkoutNotFoundException;
 import com.treinoapp.api.model.Exercise;
 import com.treinoapp.api.model.Member;
 import com.treinoapp.api.model.Workout;
@@ -56,9 +58,9 @@ class WorkoutServiceTest {
     @Test
     void shouldThrowExceptionWhenCreatingWorkoutWithNonexistentMember() {
         UUID memberId = UUID.randomUUID();
-        when(memberService.findById(memberId)).thenThrow(new IllegalArgumentException("Member not found: " + memberId));
+        when(memberService.findById(memberId)).thenThrow(new MemberNotFoundException(memberId));
 
-        assertThrows(IllegalArgumentException.class, () -> workoutService.create("Push Day", memberId));
+        assertThrows(MemberNotFoundException.class, () -> workoutService.create("Push Day", memberId));
     }
 
     @Test
@@ -66,7 +68,7 @@ class WorkoutServiceTest {
         UUID workoutId = UUID.randomUUID();
         when(workoutRepository.findById(workoutId)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> workoutService.findById(workoutId));
+        assertThrows(WorkoutNotFoundException.class, () -> workoutService.findById(workoutId));
     }
 
     @Test
