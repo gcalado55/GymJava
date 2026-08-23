@@ -9,20 +9,21 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Entity
-@Table(name = "aluno")
+@Table(name = "exercise")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Aluno {
+public class Exercise {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false)
-    private String nome;
+    private String name;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @Column(nullable = false)
+    private String muscleGroup;
+
 }
