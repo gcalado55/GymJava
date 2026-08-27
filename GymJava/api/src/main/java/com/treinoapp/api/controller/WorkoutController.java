@@ -1,15 +1,13 @@
 package com.treinoapp.api.controller;
 
-import com.treinoapp.api.dto.AddSetRequestDTO;
-import com.treinoapp.api.dto.AddWorkoutExerciseRequestDTO;
-import com.treinoapp.api.dto.WorkoutRequestDTO;
-import com.treinoapp.api.dto.WorkoutResponseDTO;
+import com.treinoapp.api.dto.*;
 import com.treinoapp.api.model.Workout;
 import com.treinoapp.api.service.WorkoutService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -44,14 +42,20 @@ public class WorkoutController {
     public ResponseEntity<Workout> addSet(@PathVariable UUID workoutId,
                                           @PathVariable UUID workoutExerciseId,
                                           @Valid @RequestBody AddSetRequestDTO dto) {
-                Workout workout = workoutService.addSet(workoutId, workoutExerciseId, dto.reps(), dto.weightKg());
-                return ResponseEntity.ok(workout);
-            }
+        Workout workout = workoutService.addSet(workoutId, workoutExerciseId, dto.reps(), dto.weightKg());
+        return ResponseEntity.ok(workout);
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<WorkoutResponseDTO> findByIdFormatted(@PathVariable UUID id) {
         WorkoutResponseDTO dto = workoutService.findByIdFormatted(id);
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<WorkoutSummaryDTO>> findAll(
+            @RequestParam(required = false) UUID memberId) {
+        return ResponseEntity.ok(workoutService.findAll(memberId));
     }
 
 }
