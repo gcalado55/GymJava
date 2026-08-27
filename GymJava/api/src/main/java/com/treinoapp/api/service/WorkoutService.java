@@ -3,6 +3,7 @@ package com.treinoapp.api.service;
 import com.treinoapp.api.dto.WorkoutExerciseDTO;
 import com.treinoapp.api.dto.WorkoutResponseDTO;
 import com.treinoapp.api.dto.WorkoutSetDTO;
+import com.treinoapp.api.dto.WorkoutSummaryDTO;
 import com.treinoapp.api.exception.ExerciseNotFoundException;
 import com.treinoapp.api.exception.MemberNotFoundException;
 import com.treinoapp.api.exception.WorkoutExerciseNotFoundException;
@@ -101,5 +102,21 @@ public class WorkoutService {
                 .toList();
 
         return new WorkoutResponseDTO(workout.getName(), workout.getMember().getName(), exerciseDTOs);
+    }
+
+    public List<WorkoutSummaryDTO> findAll(UUID memberId) {
+        List<Workout> workouts = memberId != null
+                ? workoutRepository.findByMemberIdOrderByCreatedAtDesc(memberId)
+                : workoutRepository.findAllByOrderByCreatedAtDesc();
+
+        return workouts.stream()
+                .map(w -> new WorkoutSummaryDTO(
+                        w.getId(),
+                        w.getName(),
+                        w.getMember().getName(),
+                        w.getCreatedAt(),
+                        w.getExercises().size()
+                ))
+                .toList();
     }
 }
