@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -20,20 +22,15 @@ public class WorkoutExercise {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workout_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Workout workout;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exercise_id", nullable = false)
     private Exercise exercise;
 
-    @Column(nullable = false)
-    private Integer sets;
-
-    @Column(nullable = false)
-    private Integer reps;
-
-    @Column(nullable = false)
-    private Double weightKg;
+    @OneToMany(mappedBy = "workoutExercise", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WorkoutSet> sets = new ArrayList<>();
 
     @Column(nullable = false)
     private String technique = "NO_TECHNIQUE";
