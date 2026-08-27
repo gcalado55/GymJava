@@ -1,5 +1,6 @@
 package com.treinoapp.api.controller;
 
+import com.treinoapp.api.dto.AddSetRequestDTO;
 import com.treinoapp.api.dto.AddWorkoutExerciseRequestDTO;
 import com.treinoapp.api.dto.WorkoutRequestDTO;
 import com.treinoapp.api.dto.WorkoutResponseDTO;
@@ -29,18 +30,23 @@ public class WorkoutController {
 
     @PostMapping("/{workoutId}/exercises")
     public ResponseEntity<Workout> addExercise(@PathVariable UUID workoutId,
-                                               @Valid @RequestBody AddWorkoutExerciseRequestDTO dto) {
+                                               @Valid @RequestBody
+                                               AddWorkoutExerciseRequestDTO dto) {
         Workout workout = workoutService.addExercise(
-                workoutId,
-                dto.exerciseId(),
-                dto.sets(),
-                dto.reps(),
-                dto.weightKg(),
+                workoutId, dto.exerciseId(),
                 dto.technique(),
                 dto.notes()
         );
         return ResponseEntity.ok(workout);
     }
+
+    @PostMapping("/{workoutId}/exercises/{workoutExerciseId}/sets")
+    public ResponseEntity<Workout> addSet(@PathVariable UUID workoutId,
+                                          @PathVariable UUID workoutExerciseId,
+                                          @Valid @RequestBody AddSetRequestDTO dto) {
+                Workout workout = workoutService.addSet(workoutId, workoutExerciseId, dto.reps(), dto.weightKg());
+                return ResponseEntity.ok(workout);
+            }
 
     @GetMapping("/{id}")
     public ResponseEntity<WorkoutResponseDTO> findByIdFormatted(@PathVariable UUID id) {
