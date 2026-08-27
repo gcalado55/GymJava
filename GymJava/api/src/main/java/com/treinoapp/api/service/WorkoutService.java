@@ -2,11 +2,18 @@ package com.treinoapp.api.service;
 
 import com.treinoapp.api.dto.WorkoutExerciseDTO;
 import com.treinoapp.api.dto.WorkoutResponseDTO;
+import com.treinoapp.api.dto.WorkoutSetDTO;
+import com.treinoapp.api.exception.ExerciseNotFoundException;
+import com.treinoapp.api.exception.MemberNotFoundException;
+import com.treinoapp.api.exception.WorkoutExerciseNotFoundException;
 import com.treinoapp.api.exception.WorkoutNotFoundException;
 import com.treinoapp.api.model.Exercise;
 import com.treinoapp.api.model.Member;
 import com.treinoapp.api.model.Workout;
 import com.treinoapp.api.model.WorkoutExercise;
+import com.treinoapp.api.model.WorkoutSet;
+import com.treinoapp.api.repository.ExerciseRepository;
+import com.treinoapp.api.repository.MemberRepository;
 import com.treinoapp.api.repository.WorkoutRepository;
 import com.treinoapp.api.technique.TrainingTechniqueFactory;
 import org.springframework.stereotype.Service;
@@ -18,66 +25,81 @@ import java.util.UUID;
 public class WorkoutService {
 
     private final WorkoutRepository workoutRepository;
-    private final MemberService memberService;
-    private final ExerciseService exerciseService;
+    private final MemberRepository memberRepository;
+    private final ExerciseRepository exerciseRepository;
 
     public WorkoutService(WorkoutRepository workoutRepository,
-                          MemberService memberService,
-                          ExerciseService exerciseService) {
+                          MemberRepository memberRepository,
+                          ExerciseRepository exerciseRepository) {
         this.workoutRepository = workoutRepository;
-        this.memberService = memberService;
-        this.exerciseService = exerciseService;
+        this.memberRepository = memberRepository;
+        this.exerciseRepository = exerciseRepository;
     }
 
     public Workout create(String name, UUID memberId) {
-        Member member = memberService.findById(memberId);
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(memberId));
 
         Workout workout = new Workout();
         workout.setName(name);
         workout.setMember(member);
+
         return workoutRepository.save(workout);
     }
 
-    public Workout addExercise(UUID workoutId, UUID exerciseId, Integer sets, Integer reps,
-                               Double weightKg, String technique, String notes) {
-        Workout workout = findById(workoutId);
-        Exercise exercise = exerciseService.findById(exerciseId);
+    public Workout addExercise(UUID workoutId, UUID exerciseId, String technique, String notes) {
+        Workout workout = workoutRepository.findById(workoutId)
+                .orElseThrow(() -> new WorkoutNotFoundException(workoutId));
+        Exercise exercise = exerciseRepository.findById(exerciseId)
+                .orElseThrow(() -> new ExerciseNotFoundException(exerciseId));
 
         WorkoutExercise workoutExercise = new WorkoutExercise();
         workoutExercise.setWorkout(workout);
         workoutExercise.setExercise(exercise);
-        workoutExercise.setSets(sets);
-        workoutExercise.setReps(reps);
-        workoutExercise.setWeightKg(weightKg);
         workoutExercise.setTechnique(technique != null ? technique : "NO_TECHNIQUE");
         workoutExercise.setNotes(notes);
 
         workout.getExercises().add(workoutExercise);
+
         return workoutRepository.save(workout);
     }
 
-    public Workout findById(UUID id) {
-        return workoutRepository.findById(id)
-                .orElseThrow(() -> new WorkoutNotFoundException(id));
+    public Workout addSet(UUID workoutId, UUID workoutExerciseId, Integer reps, Double weightKg) {
+        Workout workout = workoutRepository.findById(workoutId)
+                .orElseThrow(() -> new WorkoutNotFoundException(workoutId));
+
+        WorkoutExercise workoutExercise = workout.getExercises().stream()
+                .filter(we -> we.getId().equals(workoutExerciseId))
+                .findFirst()
+                .orElseThrow(() -> new WorkoutExerciseNotFoundException(workoutExerciseId));
+
+        WorkoutSet set = new WorkoutSet();
+        set.setWorkoutExercise(workoutExercise);
+        set.setSetNumber(workoutExercise.getSets().size() + 1);
+        set.setReps(reps);
+        set.setWeightKg(weightKg);
+
+        workoutExercise.getSets().add(set);
+
+        return workoutRepository.save(workout);
     }
 
-
     public WorkoutResponseDTO findByIdFormatted(UUID id) {
-        Workout workout = findById(id);
-        List<WorkoutExerciseDTO> exerciseDTOS = workout.getExercises().stream()
-                .map(workoutExercise -> new WorkoutExerciseDTO(
-                        workoutExercise.getExercise().getName(),
-                        workoutExercise.getSets(),
-                        workoutExercise.getReps(),
-                        workoutExercise.getWeightKg(),
-                        workoutExercise.getNotes(),
-                        workoutExercise.getTechnique(),
-                        TrainingTechniqueFactory.fromCode(workoutExercise.getTechnique()).getDisplayName()
-                )).toList();
-        return new WorkoutResponseDTO(
-                workout.getName(),
-                workout.getMember().getName(),
-                exerciseDTOS
-        );
+        Workout workout = workoutRepository.findById(id)
+                .orElseThrow(() -> new WorkoutNotFoundException(id));
+
+        List<WorkoutExerciseDTO> exerciseDTOs = workout.getExercises().stream()
+                .map(we -> new WorkoutExerciseDTO(
+                        we.getExercise().getName(),
+                        we.getNotes(),
+                        we.getTechnique(),
+                        TrainingTechniqueFactory.fromCode(we.getTechnique()).getDisplayName(),
+                        we.getSets().stream()
+                                .map(s -> new WorkoutSetDTO(s.getSetNumber(), s.getReps(), s.getWeightKg()))
+                                .toList()
+                ))
+                .toList();
+
+        return new WorkoutResponseDTO(workout.getName(), workout.getMember().getName(), exerciseDTOs);
     }
 }
