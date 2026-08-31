@@ -8,5 +8,7 @@ public record WorkoutSummaryDTO(
         String name,
         String memberName,
         Instant createdAt,
+        String status,
+        boolean isTemplate,
         int exerciseCount
 ) {}

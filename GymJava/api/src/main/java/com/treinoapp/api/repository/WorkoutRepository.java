@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface WorkoutRepository extends JpaRepository<Workout, UUID> {
     List<Workout> findAllByOrderByCreatedAtDesc();
     List<Workout> findByMemberIdOrderByCreatedAtDesc(UUID memberId);
+    List<Workout> findByMemberIdAndIsTemplateOrderByCreatedAtDesc(UUID memberId, boolean isTemplate);
 }

@@ -30,6 +30,12 @@ public class Workout {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(nullable = false)
+    private String status = "IN_PROGRESS";
+
+    @Column(name = "is_template", nullable = false)
+    private boolean isTemplate = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;

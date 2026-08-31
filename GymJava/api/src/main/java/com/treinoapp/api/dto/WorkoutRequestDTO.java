@@ -7,6 +7,6 @@ import java.util.UUID;
 
 public record WorkoutRequestDTO(
         @NotBlank(message = "name is required") String name,
-        @NotNull(message = "memberId is required") UUID memberId
+        boolean isTemplate
     ){
 }
