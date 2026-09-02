@@ -63,6 +63,21 @@ public class WorkoutController {
         return ResponseEntity.ok(workout);
     }
 
+    @PatchMapping("/{workoutId}/exercises/{workoutExerciseId}/log-notes")
+    public ResponseEntity<Workout> updateExerciseLogNotes(@PathVariable UUID workoutId,
+                                                         @PathVariable UUID workoutExerciseId,
+                                                         @Valid @RequestBody UpdateNoteRequestDTO dto) {
+        Workout workout = workoutService.updateExerciseLogNotes(workoutExerciseId, dto.logNotes());
+        return ResponseEntity.ok(workout);
+    }
+
+    @PatchMapping("/{workoutId}/reorder")
+    public ResponseEntity<Workout> reorderExercises(@PathVariable UUID workoutId,
+                                                    @RequestBody List<UUID> orderedIds) {
+        Workout workout = workoutService.reorderExercises(workoutId, orderedIds);
+        return ResponseEntity.ok(workout);
+    }
+
     @PatchMapping("/{workoutId}/complete")
     public ResponseEntity<Workout> completeWorkout(@PathVariable UUID workoutId) {
         Workout workout = workoutService.completeWorkout(workoutId);

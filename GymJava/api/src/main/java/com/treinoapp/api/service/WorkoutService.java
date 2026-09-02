@@ -15,12 +15,14 @@ import com.treinoapp.api.repository.WorkoutRepository;
 import com.treinoapp.api.repository.WorkoutExerciseRepository;
 import com.treinoapp.api.technique.TrainingTechniqueFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class WorkoutService {
 
     private final WorkoutRepository workoutRepository;
@@ -60,10 +62,33 @@ public class WorkoutService {
         workoutExercise.setExercise(exercise);
         workoutExercise.setTechnique(technique != null ? technique : "NO_TECHNIQUE");
         workoutExercise.setNotes(notes);
+        workoutExercise.setOrderIndex(workout.getExercises().size());
 
         workout.getExercises().add(workoutExercise);
 
         return workoutRepository.save(workout);
+    }
+
+    public Workout reorderExercises(UUID workoutId, List<UUID> orderedIds) {
+        Workout workout = workoutRepository.findById(workoutId)
+                .orElseThrow(() -> new WorkoutNotFoundException(workoutId));
+        for (int i = 0; i < orderedIds.size(); i++) {
+            final int index = i;
+            UUID oid = orderedIds.get(index);
+            workout.getExercises().stream()
+                    .filter(we -> we.getId().equals(oid))
+                    .findFirst()
+                    .ifPresent(we -> we.setOrderIndex(index));
+        }
+        return workoutRepository.save(workout);
+    }
+
+    public Workout updateExerciseLogNotes(UUID workoutExerciseId, String logNotes) {
+        WorkoutExercise workoutExercise = workoutExerciseRepository.findById(workoutExerciseId)
+                .orElseThrow(() -> new WorkoutExerciseNotFoundException(workoutExerciseId));
+        workoutExercise.setLogNotes(logNotes);
+        workoutExerciseRepository.save(workoutExercise);
+        return workoutExercise.getWorkout();
     }
 
     public Workout removeExercise(UUID workoutId, UUID workoutExerciseId) {
@@ -126,19 +151,22 @@ public class WorkoutService {
         session.setMember(template.getMember());
         session.setTemplate(false);
         session.setStatus("IN_PROGRESS");
-        session = workoutRepository.save(session);
         
-        for (WorkoutExercise templateEx : template.getExercises()) {
+        List<WorkoutExercise> ordered = template.getExercises().stream()
+                .sorted(java.util.Comparator.comparingInt(WorkoutExercise::getOrderIndex))
+                .toList();
+        for (WorkoutExercise templateEx : ordered) {
             WorkoutExercise sessionEx = new WorkoutExercise();
             sessionEx.setWorkout(session);
             sessionEx.setExercise(templateEx.getExercise());
             sessionEx.setTechnique(templateEx.getTechnique());
             sessionEx.setNotes(templateEx.getNotes());
-            workoutExerciseRepository.save(sessionEx);
+            sessionEx.setOrderIndex(templateEx.getOrderIndex());
+            sessionEx.setLogNotes(null);
             session.getExercises().add(sessionEx);
         }
         
-        return session;
+        return workoutRepository.save(session);
     }
 
     public Workout updateExerciseNote(UUID workoutExerciseId, String note) {
@@ -156,6 +184,7 @@ public class WorkoutService {
         Instant cutoff7 = Instant.now().minus(7, java.time.temporal.ChronoUnit.DAYS);
 
         List<WorkoutExerciseDTO> exerciseDTOs = workout.getExercises().stream()
+                .sorted(java.util.Comparator.comparingInt(WorkoutExercise::getOrderIndex))
                 .map(we -> {
                     int weeklyVolume = workoutExerciseRepository.findByExercise_IdAndWorkout_Member_Id(
                             we.getExercise().getId(), workout.getMember().getId()
@@ -169,6 +198,7 @@ public class WorkoutService {
                         we.getExercise().getName(),
                         we.getExercise().getMuscleGroup(),
                         we.getNotes(),
+                        we.getLogNotes(),
                         we.getTechnique(),
                         TrainingTechniqueFactory.fromCode(we.getTechnique()).getDisplayName(),
                         weeklyVolume,

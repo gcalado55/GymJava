@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.IsoFields;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +76,13 @@ public class MemberService {
         double totalVolume = allSets.size(); // Total Sets instead of load
         double averageLoad = progressCalculator.average(
                 allSets.stream().map(ts -> ts.set().getWeightKg()).toList());
-        int setsThisWeek = (int) allSets.stream().filter(ts -> !ts.date().isBefore(cutoff7)).count();
+        
+        Map<String, Integer> weeklyVolumePerMuscle = allSets.stream()
+                .filter(ts -> !ts.date().isBefore(cutoff7))
+                .collect(Collectors.groupingBy(
+                        ts -> ts.exercise().getMuscleGroup(),
+                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
+                ));
 
         List<PriorityExerciseDTO> priority = allSets.stream()
                 .collect(Collectors.groupingBy(TimedSet::exercise))
@@ -84,14 +91,20 @@ public class MemberService {
                     List<TimedSet> ts = entry.getValue().stream()
                             .sorted(Comparator.comparing(TimedSet::date)).toList();
                     double volume = ts.size(); // Total Sets
-                    double first = ts.stream().filter(t -> t.date().equals(ts.get(0).date())).count(); // First session sets
-                    double last = ts.stream().filter(t -> t.date().equals(ts.get(ts.size() - 1).date())).count(); // Last session sets
+                    double first = ts.stream()
+                            .filter(t -> t.date().equals(ts.get(0).date()))
+                            .mapToDouble(t -> progressCalculator.calculateOneRepMax(t.set().getWeightKg(), t.set().getReps()))
+                            .max().orElse(0.0);
+                    double last = ts.stream()
+                            .filter(t -> t.date().equals(ts.get(ts.size() - 1).date()))
+                            .mapToDouble(t -> progressCalculator.calculateOneRepMax(t.set().getWeightKg(), t.set().getReps()))
+                            .max().orElse(0.0);
                     double pct = progressCalculator.percentChange(first, last);
                     List<Double> points = ts.stream()
                             .collect(Collectors.groupingBy(TimedSet::date))
                             .entrySet().stream().sorted(Map.Entry.comparingByKey())
-                            .map(e -> (double) e.getValue().size())
-                            .toList(); // Sets per session
+                            .map(e -> e.getValue().stream().mapToDouble(t -> progressCalculator.calculateOneRepMax(t.set().getWeightKg(), t.set().getReps())).max().orElse(0.0))
+                            .toList();
                     return new PriorityExerciseDTO(entry.getKey().getName(), entry.getKey().getMuscleGroup(),
                             volume, pct, points);
                 })
@@ -102,7 +115,7 @@ public class MemberService {
         double overallProgress = priority.isEmpty() ? 0.0 :
                 progressCalculator.average(priority.stream().map(PriorityExerciseDTO::progressPct).toList());
 
-        return new DashboardStatsDTO(workouts.size(), totalVolume, averageLoad, overallProgress, priority, setsThisWeek);
+        return new DashboardStatsDTO(workouts.size(), totalVolume, averageLoad, overallProgress, priority, weeklyVolumePerMuscle);
     }
 
     public ProgressOverviewDTO progressOverview(UUID memberId) {
@@ -122,11 +135,25 @@ public class MemberService {
                                 .map(s -> new TimedSet(s, w.getCreatedAt(), we.getExercise()))))
                 .toList();
 
-        List<MonthlyVolumeDTO> monthlyVolume = allSets.stream()
-                .collect(Collectors.groupingBy(ts -> YearMonth.from(ts.date().atZone(ZoneOffset.UTC)).toString()))
+        List<WeeklyVolumeDTO> weeklyVolume = allSets.stream()
+                .collect(Collectors.groupingBy(
+                        ts -> {
+                            var date = ts.date().atZone(ZoneOffset.UTC);
+                            int year = date.get(IsoFields.WEEK_BASED_YEAR);
+                            int week = date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+                            return String.format("%d-W%02d", year, week);
+                        },
+                        Collectors.groupingBy(ts -> ts.exercise().getMuscleGroup())
+                ))
                 .entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(e -> new MonthlyVolumeDTO(e.getKey(), (double) e.getValue().size())) // Sets instead of load
+                .flatMap(weekEntry -> weekEntry.getValue().entrySet().stream()
+                        .map(muscleEntry -> new WeeklyVolumeDTO(
+                                weekEntry.getKey(),
+                                muscleEntry.getKey(),
+                                (double) muscleEntry.getValue().size()
+                        ))
+                )
+                .sorted(Comparator.comparing(WeeklyVolumeDTO::week))
                 .toList();
 
         List<ExerciseProgressSummaryDTO> exercises = allSets.stream()
@@ -135,18 +162,24 @@ public class MemberService {
                 .map(entry -> {
                     List<TimedSet> ts = entry.getValue().stream()
                             .sorted(Comparator.comparing(TimedSet::date)).toList();
-                    double first = ts.stream().filter(t -> t.date().equals(ts.get(0).date())).count();
-                    double last = ts.stream().filter(t -> t.date().equals(ts.get(ts.size() - 1).date())).count();
+                    double first = ts.stream()
+                            .filter(t -> t.date().equals(ts.get(0).date()))
+                            .mapToDouble(t -> progressCalculator.calculateOneRepMax(t.set().getWeightKg(), t.set().getReps()))
+                            .max().orElse(0.0);
+                    double last = ts.stream()
+                            .filter(t -> t.date().equals(ts.get(ts.size() - 1).date()))
+                            .mapToDouble(t -> progressCalculator.calculateOneRepMax(t.set().getWeightKg(), t.set().getReps()))
+                            .max().orElse(0.0);
                     double pct = progressCalculator.percentChange(first, last);
                     List<Double> points = ts.stream()
                             .collect(Collectors.groupingBy(TimedSet::date))
                             .entrySet().stream().sorted(Map.Entry.comparingByKey())
-                            .map(e -> (double) e.getValue().size())
+                            .map(e -> e.getValue().stream().mapToDouble(t -> progressCalculator.calculateOneRepMax(t.set().getWeightKg(), t.set().getReps())).max().orElse(0.0))
                             .toList();
                     return new ExerciseProgressSummaryDTO(entry.getKey().getName(), pct, points);
                 })
                 .toList();
 
-        return new ProgressOverviewDTO(monthlyVolume, exercises);
+        return new ProgressOverviewDTO(weeklyVolume, exercises);
     }
 }

@@ -10,7 +10,7 @@ public record ExerciseProgressDTO(
         Integer latestReps,
         Double bestWeightKg,
         Integer bestReps,
-        Integer totalReps,
+        Double estimated1Rm,
         Double progressPct,
         List<ProgressPointDTO> points,
         List<SessionSummaryDTO> sessions

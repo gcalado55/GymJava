@@ -1,6 +1,7 @@
 package com.treinoapp.api.dto;
 
 import java.util.List;
+import java.util.Map;
 
 public record DashboardStatsDTO(
         Integer workoutsThisMonth,
@@ -8,6 +9,6 @@ public record DashboardStatsDTO(
         Double averageLoadKg,
         Double overallProgressPct,
         List<PriorityExerciseDTO> priorityExercises,
-        Integer setsLoggedThisWeek
+        Map<String, Integer> weeklyVolumePerMuscle
 ) {
 }

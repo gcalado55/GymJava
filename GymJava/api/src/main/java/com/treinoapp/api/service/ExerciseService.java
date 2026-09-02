@@ -70,16 +70,18 @@ public class ExerciseService {
 
         if (sets.isEmpty()) {
             return new ExerciseProgressDTO(exercise.getId(), exercise.getName(),
-                    null, null, null, null, 0, 0.0, List.of(), List.of());
+                    null, null, null, null, 0.0, 0.0, List.of(), List.of());
         }
 
         WorkoutSet latest = sets.get(sets.size() - 1).set();
         WorkoutSet best = sets.stream().map(TimedSet::set)
                 .max(Comparator.comparingDouble(WorkoutSet::getWeightKg)).orElseThrow();
-        int totalReps = sets.stream().mapToInt(ts -> ts.set().getReps()).sum();
+        double estimated1Rm = progressCalculator.calculateOneRepMax(best.getWeightKg(), best.getReps());
 
-        double firstLoad = sets.stream().filter(t -> t.date().equals(sets.get(0).date())).count();
-        double lastLoad = sets.stream().filter(t -> t.date().equals(sets.get(sets.size() - 1).date())).count();
+        double firstLoad = sets.stream().filter(t -> t.date().equals(sets.get(0).date()))
+                .mapToDouble(t -> progressCalculator.calculateOneRepMax(t.set().getWeightKg(), t.set().getReps())).max().orElse(0.0);
+        double lastLoad = sets.stream().filter(t -> t.date().equals(sets.get(sets.size() - 1).date()))
+                .mapToDouble(t -> progressCalculator.calculateOneRepMax(t.set().getWeightKg(), t.set().getReps())).max().orElse(0.0);
         double progressPct = progressCalculator.percentChange(firstLoad, lastLoad);
 
         Map<Instant, List<WorkoutSet>> byDate = sets.stream()
@@ -100,13 +102,18 @@ public class ExerciseService {
 
         List<ProgressPointDTO> points = byDate.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
-                .map(e -> new ProgressPointDTO(e.getKey(), (double) e.getValue().size())) // sets
+                .map(e -> new ProgressPointDTO(
+                        e.getKey(),
+                        e.getValue().stream()
+                                .mapToDouble(s -> progressCalculator.calculateOneRepMax(s.getWeightKg(), s.getReps()))
+                                .max().orElse(0.0)
+                ))
                 .toList();
 
         return new ExerciseProgressDTO(exercise.getId(), exercise.getName(),
                 latest.getWeightKg(), latest.getReps(),
                 best.getWeightKg(), best.getReps(),
-                totalReps, progressPct, points, sessions);
+                estimated1Rm, progressPct, points, sessions);
     }
 
     public Optional<PreviousNoteDTO> getPreviousNote(UUID exerciseId, UUID memberId) {

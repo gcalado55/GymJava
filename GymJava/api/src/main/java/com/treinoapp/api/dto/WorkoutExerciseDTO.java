@@ -9,6 +9,7 @@ public record WorkoutExerciseDTO(
         String exerciseName,
         String targetMuscles,
         String notes,
+        String logNotes,
         String technique,
         String techniqueName,
         int weeklyVolume,

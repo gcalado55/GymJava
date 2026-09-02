@@ -35,7 +35,13 @@ public class WorkoutExercise {
     @Column(nullable = false)
     private String technique = "NO_TECHNIQUE";
 
+    @Column(nullable = false)
+    private int orderIndex = 0;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Column(columnDefinition = "TEXT")
+    private String logNotes;
 
 }
