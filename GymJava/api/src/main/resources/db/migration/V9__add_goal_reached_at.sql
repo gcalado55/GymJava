@@ -1,0 +1,1 @@
+ALTER TABLE goal ADD COLUMN reached_at TIMESTAMP NULL;

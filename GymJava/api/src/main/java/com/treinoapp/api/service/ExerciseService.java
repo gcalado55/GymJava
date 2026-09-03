@@ -62,6 +62,7 @@ public class ExerciseService {
         List<TimedSet> sets = workoutExerciseRepository
                 .findByExercise_IdAndWorkout_Member_Id(exerciseId, memberId).stream()
                 .filter(we -> !we.getWorkout().isTemplate())
+                .filter(we -> "COMPLETED".equals(we.getWorkout().getStatus()))
                 .filter(we -> !we.getWorkout().getCreatedAt().isBefore(cutoff))
                 .flatMap(we -> we.getSets().stream()
                         .map(s -> new TimedSet(s, we.getWorkout().getCreatedAt())))

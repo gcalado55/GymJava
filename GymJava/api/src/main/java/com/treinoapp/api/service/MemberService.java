@@ -64,6 +64,7 @@ public class MemberService {
 
         List<Workout> workouts = workoutRepository.findByMemberIdOrderByCreatedAtDesc(memberId).stream()
                 .filter(w -> !w.isTemplate())
+                .filter(w -> "COMPLETED".equals(w.getStatus()))
                 .filter(w -> !w.getCreatedAt().isBefore(cutoff30))
                 .toList();
 
@@ -76,6 +77,12 @@ public class MemberService {
         double totalVolume = allSets.size(); // Total Sets instead of load
         double averageLoad = progressCalculator.average(
                 allSets.stream().map(ts -> ts.set().getWeightKg()).toList());
+
+        Map<String, Double> averageLoadPerExercise = allSets.stream()
+                .collect(Collectors.groupingBy(
+                        ts -> ts.exercise().getName(),
+                        Collectors.averagingDouble(ts -> ts.set().getWeightKg())
+                ));
         
         Map<String, Integer> weeklyVolumePerMuscle = allSets.stream()
                 .filter(ts -> !ts.date().isBefore(cutoff7))
@@ -115,7 +122,7 @@ public class MemberService {
         double overallProgress = priority.isEmpty() ? 0.0 :
                 progressCalculator.average(priority.stream().map(PriorityExerciseDTO::progressPct).toList());
 
-        return new DashboardStatsDTO(workouts.size(), totalVolume, averageLoad, overallProgress, priority, weeklyVolumePerMuscle);
+        return new DashboardStatsDTO(workouts.size(), totalVolume, averageLoad, overallProgress, priority, weeklyVolumePerMuscle, averageLoadPerExercise);
     }
 
     public ProgressOverviewDTO progressOverview(UUID memberId) {
@@ -126,6 +133,7 @@ public class MemberService {
 
         List<Workout> workouts = workoutRepository.findByMemberIdOrderByCreatedAtDesc(memberId).stream()
                 .filter(w -> !w.isTemplate())
+                .filter(w -> "COMPLETED".equals(w.getStatus()))
                 .filter(w -> !w.getCreatedAt().isBefore(cutoff))
                 .toList();
 

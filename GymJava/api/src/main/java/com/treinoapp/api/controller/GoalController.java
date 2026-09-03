@@ -38,4 +38,10 @@ public class GoalController {
     public ResponseEntity<GoalResponseDTO> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(goalService.findById(id));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        goalService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

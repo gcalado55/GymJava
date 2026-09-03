@@ -43,4 +43,7 @@ public class Goal {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "reached_at")
+    private Instant reachedAt;
 }
