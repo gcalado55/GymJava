@@ -1,14 +1,14 @@
 package com.treinoapp.api.dto;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.UUID;
 
-public record WorkoutResponseDTO(
+public record WorkoutSummaryDTO(
+        UUID id,
         String name,
         String memberName,
         Instant createdAt,
         String status,
         boolean isTemplate,
-        List<WorkoutExerciseDTO> exercises
-) {
-}
+        int exerciseCount
+) {}

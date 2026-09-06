@@ -1,0 +1,1 @@
+ALTER TABLE workout ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT now();

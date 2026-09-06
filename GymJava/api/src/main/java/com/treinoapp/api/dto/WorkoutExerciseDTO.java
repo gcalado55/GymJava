@@ -1,12 +1,18 @@
 package com.treinoapp.api.dto;
 
+import java.util.List;
+
+import java.util.UUID;
+
 public record WorkoutExerciseDTO(
+        UUID id,
         String exerciseName,
-        Integer sets,
-        Integer reps,
-        Double weightKg,
+        String targetMuscles,
         String notes,
+        String logNotes,
         String technique,
-        String executionGuidance
+        String techniqueName,
+        int weeklyVolume,
+        List<WorkoutSetDTO> sets
 ) {
 }
