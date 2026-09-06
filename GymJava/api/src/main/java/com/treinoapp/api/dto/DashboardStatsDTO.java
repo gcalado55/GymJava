@@ -10,6 +10,7 @@ public record DashboardStatsDTO(
         Double overallProgressPct,
         List<PriorityExerciseDTO> priorityExercises,
         Map<String, Integer> weeklyVolumePerMuscle,
-        Map<String, Double> averageLoadPerExercise
+        Map<String, Double> averageLoadPerExercise,
+        Map<String, List<Double>> loadTrendPerExercise
 ) {
 }

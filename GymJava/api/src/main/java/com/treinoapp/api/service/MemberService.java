@@ -83,6 +83,24 @@ public class MemberService {
                         ts -> ts.exercise().getName(),
                         Collectors.averagingDouble(ts -> ts.set().getWeightKg())
                 ));
+
+        // Per-exercise e1RM trend points across sessions (oldest -> newest), limited to top volume exercises.
+        Map<String, List<Double>> loadTrendPerExercise = allSets.stream()
+                .collect(Collectors.groupingBy(TimedSet::exercise))
+                .entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey().getName(),
+                        e -> e.getValue().stream()
+                                .sorted(Comparator.comparing(TimedSet::date))
+                                .collect(Collectors.groupingBy(TimedSet::date))
+                                .entrySet().stream()
+                                .sorted(Map.Entry.comparingByKey())
+                                .map(d -> d.getValue().stream()
+                                        .mapToDouble(t -> progressCalculator.calculateOneRepMax(t.set().getWeightKg(), t.set().getReps()))
+                                        .max().orElse(0.0))
+                                .toList(),
+                        (a, b) -> a
+                ));
         
         Map<String, Integer> weeklyVolumePerMuscle = allSets.stream()
                 .filter(ts -> !ts.date().isBefore(cutoff7))
@@ -122,7 +140,7 @@ public class MemberService {
         double overallProgress = priority.isEmpty() ? 0.0 :
                 progressCalculator.average(priority.stream().map(PriorityExerciseDTO::progressPct).toList());
 
-        return new DashboardStatsDTO(workouts.size(), totalVolume, averageLoad, overallProgress, priority, weeklyVolumePerMuscle, averageLoadPerExercise);
+        return new DashboardStatsDTO(workouts.size(), totalVolume, averageLoad, overallProgress, priority, weeklyVolumePerMuscle, averageLoadPerExercise, loadTrendPerExercise);
     }
 
     public ProgressOverviewDTO progressOverview(UUID memberId) {
